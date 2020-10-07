@@ -1,3 +1,4 @@
+import { BadRequestErrors } from './../errors/bad-request-error';
 import { RequestValidationError } from './../errors/request-validation-error';
 import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
@@ -13,13 +14,22 @@ router.post('/api/users/signup', [
     if (!errors.isEmpty()) {
         throw new RequestValidationError(errors.array());
     }
-    const { email, body } = req.body;
 
     console.log('Creating user...');
 
-    
+    const { email, password } = req.body;
 
-    res.send({});
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+        console.log('Email in use');
+        throw new BadRequestErrors('Email in used!')
+    }
+
+    const user = User.build({ email, password });
+    await user.save();
+
+    res.status(201).send(user);
 });
 
 export { router as signupRouter };
