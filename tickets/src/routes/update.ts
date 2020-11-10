@@ -3,7 +3,7 @@ import { TicketUpdatedPublisher } from './../events/publishers/ticket-updated-pu
 import express, { Request, Response } from 'express';
 import { body } from 'express-validator';
 import { Ticket } from '../models/ticket';
-import { validateRequest, NotFoundError, requireAuth, NotAuthorizedError } from '@oscar-ticketingdev/common';
+import { validateRequest, NotFoundError, requireAuth, NotAuthorizedError, BadRequestError } from '@oscar-ticketingdev/common';
 
 
 const router = express.Router();
@@ -20,6 +20,10 @@ router.put(
   const ticket = await Ticket.findById(req.params.id);
   if (!ticket) {
     throw new NotFoundError();
+  }
+
+  if (ticket.orderId) {
+    throw new BadRequestError('Ticket has been reserved!');
   }
   
   if (ticket.userId !== req.currentUser!.id) {
