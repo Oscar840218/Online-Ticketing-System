@@ -1,4 +1,4 @@
-import { queueGroupName } from './../../../../tickets/src/events/listeners/queue-group-name';
+import { queueGroupName } from './queue-group-name';
 import { Message } from 'node-nats-streaming';
 import { Listener, ExpirationCompleteEvent, Subject, OrderStatus } from '@oscar-ticketingdev/common';
 import { Order } from '../../models/order';
