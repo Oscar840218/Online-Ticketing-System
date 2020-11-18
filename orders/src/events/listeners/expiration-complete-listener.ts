@@ -1,35 +1,37 @@
-import { queueGroupName } from './queue-group-name';
+import {
+  Listener,
+  Subjects,
+  ExpirationCompleteEvent,
+  OrderStatus,
+} from '@sgtickets/common';
 import { Message } from 'node-nats-streaming';
-import { Listener, ExpirationCompleteEvent, Subject, OrderStatus } from '@oscar-ticketingdev/common';
+import { queueGroupName } from './queue-group-name';
 import { Order } from '../../models/order';
-import { OrderCancelledPubliser } from './../publishers/order-cancelled-publisher';
+import { OrderCancelledPublisher } from '../publishers/order-cancelled-publisher';
 
-export class ExpirationCompleteListener extends Listener<ExpirationCompleteEvent> {
-  readonly subject = Subject.ExpirationComplete;
+export class ExpirationCompleteListener extends Listener<
+  ExpirationCompleteEvent
+> {
   queueGroupName = queueGroupName;
+  subject: Subjects.ExpirationComplete = Subjects.ExpirationComplete;
 
   async onMessage(data: ExpirationCompleteEvent['data'], msg: Message) {
     const order = await Order.findById(data.orderId).populate('ticket');
+
     if (!order) {
       throw new Error('Order not found');
     }
 
-    if (order.status == OrderStatus.Complete) {
-      return msg.ack();
-    }
-
     order.set({
-      status: OrderStatus.Cancelled
+      status: OrderStatus.Cancelled,
     });
-
     await order.save();
-
-    await new OrderCancelledPubliser(this.client).publish({
+    await new OrderCancelledPublisher(this.client).publish({
       id: order.id,
       version: order.version,
       ticket: {
-          id: order.ticket.id
-      }
+        id: order.ticket.id,
+      },
     });
 
     msg.ack();

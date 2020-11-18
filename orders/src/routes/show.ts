@@ -1,23 +1,28 @@
-import { requireAuth, NotFoundError, NotAuthorizedError } from '@oscar-ticketingdev/common';
-import express, { Response, Request } from 'express';
-import { formatDiagnostic } from 'typescript';
-import { Order } from '../models/order'
+import express, { Request, Response } from 'express';
+import {
+  requireAuth,
+  NotFoundError,
+  NotAuthorizedError,
+} from '@sgtickets/common';
+import { Order } from '../models/order';
 
 const router = express.Router();
 
-router.get('/api/orders/:orderId', async (req: Request, res: Response) => {
+router.get(
+  '/api/orders/:orderId',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const order = await Order.findById(req.params.orderId).populate('ticket');
 
-  const order = await Order.findById(req.params.orderId).populate('ticket');
+    if (!order) {
+      throw new NotFoundError();
+    }
+    if (order.userId !== req.currentUser!.id) {
+      throw new NotAuthorizedError();
+    }
 
-  if (!order) {
-    throw new NotFoundError();
+    res.send(order);
   }
+);
 
-  if (order.userId !== req.currentUser!.id) {
-    throw new NotAuthorizedError();
-  }
-
-  res.send(order);
-});
-
-export { router as ShowOrderRouter };
+export { router as showOrderRouter };

@@ -1,6 +1,5 @@
-import { Publisher, OrderCreatedEvent, Subject } from '@oscar-ticketingdev/common';
+import { Publisher, OrderCreatedEvent, Subjects } from '@sgtickets/common';
 
-export class OrderCreatedPubliser extends Publisher<OrderCreatedEvent> {
-    readonly subject = Subject.OrderCreated;
-
+export class OrderCreatedPublisher extends Publisher<OrderCreatedEvent> {
+  subject: Subjects.OrderCreated = Subjects.OrderCreated;
 }
